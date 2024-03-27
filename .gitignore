@@ -1,0 +1,50 @@
+# Arquivos e diretórios do PlatformIO que devem ser ignorados
+
+# Pastas temporárias
+.pio/
+.pioenvs/
+.piolibdeps/
+.vscode/
+
+# Arquivos de cache locais
+.pio/.cache/
+.pio/build/
+
+# Arquivos gerados durante a compilação
+.pio/libdeps/
+.pio/.vscode/
+__pycache__/
+
+# Arquivos de ambiente (se houver)
+.pioenv
+
+# Arquivos de log
+.pio/.pio/
+
+# Arquivos específicos do sistema operacional
+.DS_Store
+._*
+
+# Arquivos específicos de editores/IDEs
+.vscode/
+.idea/
+*.swp
+*~
+.project
+*.pyc
+
+# Ignore arquivos específicos do firmware e uploads
+*.elf
+*.bin
+*.hex
+*.eep
+*.map
+*.lst
+*.dmp
+*.lelf
+.firmware.bin
+
+# Arquivos e pastas de backup
+*backup*
+*~
+*.bak
