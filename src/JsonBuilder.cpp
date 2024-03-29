@@ -1,17 +1,16 @@
 #include "JsonBuilder.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <cstddef>
 
 JsonBuilder::JsonBuilder() {
 
 }
 
-char* JsonBuilder::JsonMessageBuilder(const char* tag, float value) {
+void JsonBuilder::JsonMessageBuilder(const char* tag, float value, char* jsonBuffer, size_t bufferSize) {
    StaticJsonDocument<100> jsonDoc;
    jsonDoc[tag] = value;
 
-   char jsonBuffer[100];
-   serializeJson(jsonDoc, jsonBuffer);
-   serializeJsonPretty(jsonDoc, Serial);
-   return jsonBuffer;
+   serializeJson(jsonDoc, jsonBuffer, bufferSize);
+   // serializeJsonPretty(jsonDoc, Serial);
 }

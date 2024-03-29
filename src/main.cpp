@@ -61,18 +61,21 @@ void connectMQTT() {
 }
 
 void SendInformation(const char* tag, float value){
-  char* json_message = json.JsonMessageBuilder(tag, value);
+  char jsonBuffer[100];
+  json.JsonMessageBuilder(tag, value, jsonBuffer, sizeof(jsonBuffer));
+  Serial.println("Conteúdo da mensagem:" + String(jsonBuffer));
 
   // Envia a mensagem
-  if (client.publish(config.mqtt_topic, json_message)) {
-    Serial.println("Mensagem enviada com sucesso: ");
-    Serial.print("\n");
+  if (client.publish(config.mqtt_topic, jsonBuffer)) {
+    Serial.println("Mensagem enviada com sucesso.");
   } else {
     Serial.println("Falha ao enviar a mensagem.");
   }
 }
 
 void setup() {
+  //Serial
+  Serial.begin(9600);
   //WiFi
   setup_wifi();
   //MQTT
