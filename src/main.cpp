@@ -3,36 +3,48 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-const char* ssid = "ATPlus-Mauricio-2.4G";
-const char* password = "98029804";
-const char* mqtt_server = "agrotechlab.lages.ifsc.edu.br";
-const char* mqtt_user = "er6spv48qqgxu1cw52yo";
-const char* mqtt_topic = "v1/devices/me/telemetry";
+#include <Configuration.h>
+#include <LedManager.h>
+#include <TemperatureSensor.h>
+#include <HumiditySensor.h>
+#include <WindSensor.h>
+#include <JsonBuilder.h>
+
+Configuration config;
+LedManager led = LedManager(LED_BUILTIN);
+JsonBuilder json;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 unsigned long time_now;
-unsigned long led_1_sec = 1000;
-unsigned long last_led_1_sec = 0;
-unsigned long led_5_sec = 5000;
-unsigned long last_led_5_sec = 0;
+unsigned long last_led_time = 0;
+unsigned long last_temp_time = 0;
+unsigned long last_humidity_time = 0;
+unsigned long last_wind_time = 0;
 
 void setup_wifi() {
-  WiFi.begin(ssid, password);
+  Serial.println("Iniciando processo de conexão com o Wifi.");
+  led.On();
+  Serial.println("Rede: " + String(config.ssid));
+  WiFi.begin(config.ssid, config.password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print("Tentando conectar... ");
   }
   Serial.println("WiFi conectado. IP: " + String(WiFi.localIP().toString()));
+  led.Off();
 }
 
 void connectMQTT() {
-  client.setServer(mqtt_server, 1883);
+  Serial.println("Iniciando processo de conexão com o servidor MQTT.");
+  led.On();
+  Serial.println("Servidor: " + String(config.mqtt_server));
+  client.setServer(config.mqtt_server, 1883);
   while (!client.connected()) {
     Serial.println("Conectando ao MQTT...");
-
-    if (client.connect("ESPClient", mqtt_user, nullptr)) {
-      Serial.println("Conectado ao MQTT");
+    if (client.connect("ESPClient", config.mqtt_user, nullptr)) {
+      Serial.println("Conectado ao MQTT.");
+      led.Off();
     } else {
       Serial.print("Ocorreu um erro inesperado: ");
       Serial.println(client.state());
@@ -42,18 +54,12 @@ void connectMQTT() {
   }
 }
 
-void sendLedStatus(boolean ledStatus){
-  // Monta o JSON
-  StaticJsonDocument<100> jsonDoc;
-  jsonDoc["led_status"] = ledStatus;
-
-  char jsonBuffer[100];
-  serializeJson(jsonDoc, jsonBuffer);
+void SendInformation(char* tag, float value){
+  char* json_message = json.JsonMessageBuilder(tag, value);
 
   // Envia a mensagem
-  if (client.publish(mqtt_topic, jsonBuffer)) {
+  if (client.publish(config.mqtt_topic, json_message)) {
     Serial.println("Mensagem enviada com sucesso: ");
-    serializeJsonPretty(jsonDoc, Serial);
     Serial.print("\n");
   } else {
     Serial.println("Falha ao enviar a mensagem.");
@@ -61,53 +67,48 @@ void sendLedStatus(boolean ledStatus){
 }
 
 void setup() {
-  //Led
-  pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin(9600);
   //WiFi
   setup_wifi();
   //MQTT
   connectMQTT();
-
 }
 
-void pisca(){
+void ProcessTemperature(){
   time_now = millis();
-  if (time_now >= led_1_sec + last_led_1_sec){
-    last_led_1_sec = time_now;
-      if (time_now >= led_5_sec + last_led_5_sec){
-          last_led_5_sec = time_now;
-          digitalWrite(LED_BUILTIN, LOW);
-          Serial.println("LED 5 SEC ON");
-          sendLedStatus(true);
-          delay(100);
-          digitalWrite(LED_BUILTIN, HIGH);
-          Serial.println("LED 5 SEC OFF");
-          sendLedStatus(false);
-          delay(100);
-          digitalWrite(LED_BUILTIN, LOW);
-          Serial.println("LED 5 SEC ON");
-          sendLedStatus(true);
-          delay(100);
-          digitalWrite(LED_BUILTIN, HIGH);
-          Serial.println("LED 5 SEC OFF");
-          sendLedStatus(false);
-          return;
-      }
-      digitalWrite(LED_BUILTIN, LOW);
-      Serial.println("LED 1 SEC ON");
-      sendLedStatus(true);
-      delay(100);
-      digitalWrite(LED_BUILTIN, HIGH);
-      Serial.println("LED 1 SEC OFF");
-      sendLedStatus(false);
+  if (time_now >= config.temp_time + last_temp_time){
+      last_temp_time = time_now;
+      //Lógica de leitura e envio
+  }
+}
+
+void ProcessHumidity(){
+  time_now = millis();
+  if (time_now >= config.humidity_time + last_humidity_time){
+      last_humidity_time = time_now;
+      //Lógica de leitura e envio
+  }
+}
+
+void ProcessWind(){
+  time_now = millis();
+  if (time_now >= config.wind_time + last_wind_time){
+      last_wind_time = time_now;
+      //Lógica de leitura e envio
+  }
+}
+
+void AlterLed(){
+  time_now = millis();
+  if (time_now >= config.led_time + last_led_time){
+    last_led_time = time_now;
+    led.Change();
   }
 }
 
 void loop() {
-  pisca();
   if (!client.connected()) {
     connectMQTT();
   }
+  AlterLed();
   client.loop();
 }
