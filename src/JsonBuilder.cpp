@@ -6,7 +6,7 @@ JsonBuilder::JsonBuilder() {
 
 }
 
-char* JsonBuilder::JsonMessageBuilder(char* tag, float value) {
+char* JsonBuilder::JsonMessageBuilder(const char* tag, float value) {
    StaticJsonDocument<100> jsonDoc;
    jsonDoc[tag] = value;
 

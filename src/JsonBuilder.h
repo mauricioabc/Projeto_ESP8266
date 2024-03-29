@@ -7,7 +7,7 @@ private:
 
 public:
     JsonBuilder(); // Construtor
-    char* JsonMessageBuilder(char* tag, float value);
+    char* JsonMessageBuilder(const char* tag, float value);
 };
 
 #endif
