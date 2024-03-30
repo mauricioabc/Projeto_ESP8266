@@ -8,20 +8,19 @@
 #include <TemperatureSensor.h>
 #include <HumiditySensor.h>
 #include <WindSensor.h>
-#include <JsonBuilder.h>
+#include <InstantMessage.h>
+#include <Storage.h>
 
 Configuration config;
 LedManager led = LedManager(LED_BUILTIN);
-JsonBuilder json;
+InstantMessage instant_message;
+Storage storage;
 TemperatureSensor temperature;
 HumiditySensor humidity;
 WindSensor wind;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-const char* temperature_tag = "temp";
-const char* humidity_tag = "umid";
-const char* wind_tag = "vel_vento";
 unsigned long time_now;
 unsigned long last_led_time = 0;
 unsigned long last_temp_time = 0;
@@ -60,9 +59,9 @@ void connectMQTT() {
   }
 }
 
-void SendInformation(const char* tag, float value){
-  char jsonBuffer[100];
-  json.JsonMessageBuilder(tag, value, jsonBuffer, sizeof(jsonBuffer));
+void SendAccumulatedInformation(){
+  char jsonBuffer[512];
+  storage.GenerateLastReadingsMessage(jsonBuffer, sizeof(jsonBuffer));
   Serial.println("Conteúdo da mensagem:" + String(jsonBuffer));
 
   // Envia a mensagem
@@ -70,6 +69,25 @@ void SendInformation(const char* tag, float value){
     Serial.println("Mensagem enviada com sucesso.");
   } else {
     Serial.println("Falha ao enviar a mensagem.");
+  }
+}
+
+void SendInstantInformation(const char* tag, float value){
+  char jsonBuffer[100];
+  instant_message.InstantMessageBuilder(tag, value, jsonBuffer, sizeof(jsonBuffer));
+  Serial.println("Conteúdo da mensagem:" + String(jsonBuffer));
+
+  // Envia a mensagem
+  if (client.publish(config.mqtt_topic, jsonBuffer)) {
+    Serial.println("Mensagem enviada com sucesso.");
+  } else {
+    Serial.println("Falha ao enviar a mensagem.");
+  }
+}
+
+void ProcessAccumulatedInformation(){
+  if(storage.IsFull()){
+    SendAccumulatedInformation();
   }
 }
 
@@ -88,7 +106,10 @@ void ProcessTemperature(){
       last_temp_time = time_now;
       //Lógica de leitura e envio
       float new_temperature = temperature.GetTemperature();
-      SendInformation(temperature_tag, new_temperature);
+      if(!config.low_power){
+        SendInstantInformation(config.temperature_tag, new_temperature);
+      }
+      storage.SaveNewTemperature(new_temperature);
   }
 }
 
@@ -98,7 +119,10 @@ void ProcessHumidity(){
       last_humidity_time = time_now;
       //Lógica de leitura e envio
       float new_humidity = humidity.GetHumidity();
-      SendInformation(humidity_tag, new_humidity);
+      if(!config.low_power){
+        SendInstantInformation(config.humidity_tag, new_humidity);
+      }
+      storage.SaveNewHumidity(new_humidity);
   }
 }
 
@@ -108,7 +132,10 @@ void ProcessWind(){
       last_wind_time = time_now;
       //Lógica de leitura e envio
       float new_wind = wind.GetWind();
-      SendInformation(wind_tag, new_wind);
+      if(!config.low_power){
+        SendInstantInformation(config.wind_tag, new_wind);
+      }
+      storage.SaveNewWind(new_wind);
   }
 }
 
@@ -130,6 +157,8 @@ void loop() {
   ProcessHumidity();
   AlterLed();
   ProcessWind();
+  AlterLed();
+  ProcessAccumulatedInformation();
   AlterLed();
   client.loop();
 }

@@ -12,6 +12,10 @@ Configuration::Configuration() :
   led_time(1000), 
   temp_time(5000), 
   humidity_time(10000),  
-  wind_time(15000){
+  wind_time(15000),
+  low_power(false),
+  temperature_tag("temp"),
+  humidity_tag("umid"),
+  wind_tag("vel_vento"){
  
 }

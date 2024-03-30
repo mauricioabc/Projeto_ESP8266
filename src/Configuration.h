@@ -18,6 +18,10 @@ public:
     unsigned long temp_time;
     unsigned long humidity_time;
     unsigned long wind_time;
+    bool low_power;
+    const char* temperature_tag;
+    const char* humidity_tag;
+    const char* wind_tag;
 };
 
 #endif
