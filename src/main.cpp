@@ -88,6 +88,7 @@ void SendInstantInformation(const char* tag, float value){
 void ProcessAccumulatedInformation(){
   if(storage.IsFull()){
     SendAccumulatedInformation();
+    storage.ClearAll();
   }
 }
 

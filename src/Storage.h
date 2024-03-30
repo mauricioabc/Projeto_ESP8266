@@ -16,6 +16,7 @@ public:
     void SaveNewWind(float new_wind);
     bool IsFull();
     void GenerateLastReadingsMessage(char* jsonBuffer, size_t bufferSize);
+    void ClearAll();
 };
 
 #endif
