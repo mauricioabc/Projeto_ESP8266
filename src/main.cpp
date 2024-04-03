@@ -86,7 +86,7 @@ void SendInstantInformation(const char* tag, float value){
 }
 
 void ProcessAccumulatedInformation(){
-  if(storage.IsFull()){
+  if(storage.IsFull() && config.low_power){
     SendAccumulatedInformation();
     storage.ClearAll();
   }
@@ -109,6 +109,7 @@ void ProcessTemperature(){
       float new_temperature = temperature.GetTemperature();
       if(!config.low_power){
         SendInstantInformation(config.temperature_tag, new_temperature);
+        return;
       }
       storage.SaveNewTemperature(new_temperature);
   }
@@ -122,6 +123,7 @@ void ProcessHumidity(){
       float new_humidity = humidity.GetHumidity();
       if(!config.low_power){
         SendInstantInformation(config.humidity_tag, new_humidity);
+        return;
       }
       storage.SaveNewHumidity(new_humidity);
   }
@@ -135,6 +137,7 @@ void ProcessWind(){
       float new_wind = wind.GetWind();
       if(!config.low_power){
         SendInstantInformation(config.wind_tag, new_wind);
+        return;
       }
       storage.SaveNewWind(new_wind);
   }

@@ -6,7 +6,7 @@
 Configuration config_storage;
 
 unsigned long max_temp_size = 6;
-unsigned long max_humi_size = 2;
+unsigned long max_humi_size = 3;
 unsigned long max_wind_size = 2;
 
 Storage::Storage(){
